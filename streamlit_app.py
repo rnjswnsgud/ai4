@@ -10,7 +10,7 @@ import gdown
 # ======================
 # 페이지/스타일
 # ======================
-st.set_page_config(page_title="Fastai 이미지 분류기", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="수학 문제 유형 분류기", page_icon="🧮", layout="wide")
 st.markdown("""
 <style>
 h1 { color:#1E88E5; text-align:center; font-weight:800; letter-spacing:-0.5px; }
@@ -32,7 +32,7 @@ h1 { color:#1E88E5; text-align:center; font-weight:800; letter-spacing:-0.5px; }
 </style>
 """, unsafe_allow_html=True)
 
-st.title("이미지 분류기 (Fastai) — 확률 막대 + 라벨별 고정 콘텐츠")
+st.title("수학 문제 유형 이미지 분류기 (Fastai)")
 
 # ======================
 # 세션 상태
@@ -45,8 +45,8 @@ if "last_prediction" not in st.session_state:
 # ======================
 # 모델 로드
 # ======================
-FILE_ID = st.secrets.get("GDRIVE_FILE_ID", "1g1OixK-jPOasVHR5BIAVZO3db4gol2Ng")
-MODEL_PATH = st.secrets.get("MODEL_PATH", "model.pkl")
+FILE_ID = st.secrets.get("GDRIVE_FILE_ID", "1g1OixK-jPOasVHR5BIAVZO3db4gol2Ng") # 예시
+MODEL_PATH = st.secrets.get("MODEL_PATH", "model.pkl") # 예시
 
 @st.cache_resource
 def load_model_from_drive(file_id: str, output_path: str):
@@ -60,24 +60,28 @@ with st.spinner("🤖 모델 로드 중..."):
 st.success("✅ 모델 로드 완료")
 
 labels = [str(x) for x in learner.dls.vocab]
-st.write(f"**분류 가능한 항목:** `{', '.join(labels)}`")
+st.write(f"**분류 가능한 문제 유형:** `{', '.join(labels)}`")
 st.markdown("---")
 
 # ======================
-# 라벨 이름 매핑: 여기를 채우세요!
-# 각 라벨당 최대 3개씩 표시됩니다.
+# 라벨별 고정 콘텐츠 (수학 문제용)
 # ======================
-CONTENT_BY_LABEL: dict[str, dict[str, list[str]]] = {
-    # 예)
-    # "짬뽕": {
-    #   "texts": ["짬뽕의 특징과 유래", "국물 맛 포인트", "지역별 스타일 차이"],
-    #   "images": ["https://.../jjampong1.jpg", "https://.../jjampong2.jpg"],
-    #   "videos": ["https://youtu.be/XXXXXXXXXXX"]
-    # },
-   labels[0] : {"texts" : ["짜장면은 맛있어"], "images" : ["https://www.google.com/url?sa=i&url=https%3A%2F%2F8dogam.com%2Fproduct%2F3a4004fdb9ba468a24315e080ea480f1%3Fsrsltid%3DAfmBOoqXeNu691o07Ww0C_nS0Chv-_ujGIrELX86mJzPVdOHNHe_HV9k&psig=AOvVaw1pIK85SPgh6lHkpFa4x3aY&ust=1764041305324000&source=images&cd=vfe&opi=89978449&ved=0CBUQjRxqFwoTCPCKlY_siZEDFQAAAAAdAAAAABAE"]},
-   labels[1] : {"texts" : ["중국식 냉면은 맛있어"], "images" : ["https://www.google.com/imgres?q=%EC%A4%91%EA%B5%AD%EC%8B%9D%20%EB%83%89%EB%A9%B4&imgurl=https%3A%2F%2Fwww.unileverfoodsolutions.co.kr%2Fdam%2Fglobal-ufs%2Fmcos%2Fsouth-korea%2Fcalcmenu%2Frecipes%2Fkr-recipes%2Fchinese%2Fheader%2F%25EC%25A4%2591%25EA%25B5%25AD%25EB%2583%2589%25EB%25A9%25B4-chinese-cold-noodles-header-1260x709px.jpg&imgrefurl=https%3A%2F%2Fwww.unileverfoodsolutions.co.kr%2Frecipe%2F%25EC%25A4%2591%25EA%25B5%25AD-%25EB%2583%2589%25EB%25A9%25B4-R9008730.html&docid=GRP6jBwOviJAsM&tbnid=M5izEZquh8Kc5M&vet=12ahUKEwjY9cfH7ImRAxU1m68BHVVMCLcQM3oECBgQAA..i&w=1260&h=709&hcb=2&ved=2ahUKEwjY9cfH7ImRAxU1m68BHVVMCLcQM3oECBgQAA"]},
-   labels[2] : {"texts" : ["짬뽕은 맛있어"], "images" : ["https://www.google.com/imgres?q=%EC%A7%AC%EB%B4%89&imgurl=https%3A%2F%2Fpds.joongang.co.kr%2Fnews%2Fcomponent%2Fhtmlphoto_mmdata%2F201706%2F05%2Fd3feddd2-7588-410b-b08e-d963f782450b.jpg&imgrefurl=https%3A%2F%2Fwww.joongang.co.kr%2Farticle%2F21634898&docid=dNiCZXW5m8EZxM&tbnid=zerj-60psWQzXM&vet=12ahUKEwjokbjX7ImRAxUObPUHHVvuD0MQM3oECCgQAA..i&w=560&h=373&hcb=2&ved=2ahUKEwjokbjX7ImRAxUObPUHHVvuD0MQM3oECCgQAA"]},
-   labels[3] : {"texts" : ["탕수육은 맛있어"], "images" : ["https://www.google.com/imgres?q=%ED%83%95%EC%88%98%EC%9C%A1&imgurl=https%3A%2F%2Fblog.kakaocdn.net%2Fdna%2FqnIz2%2FbtqSdtiK7C4%2FAAAAAAAAAAAAAAAAAAAAAK_eDgChgNlbA3DwDL3Rhp3zyE68j5YgxkTq4Zz6RRN5%2Fimg.jpg%3Fcredential%3DyqXZFxpELC7KVnFOS48ylbz2pIh7yKj8%26expires%3D1764514799%26allow_ip%3D%26allow_referer%3D%26signature%3DIgQS1EsJodJN9xYMyJB6awE7Ae8%253D&imgrefurl=https%3A%2F%2Fcookingday.tistory.com%2F26&docid=wwuXwtBrDJKJMM&tbnid=mlmvU6LEbOj6JM&vet=12ahUKEwjPgfHn7ImRAxVAh68BHcq4ASsQM3oECBMQAA..i&w=661&h=426&hcb=2&ved=2ahUKEwjPgfHn7ImRAxVAh68BHcq4ASsQM3oECBMQAA"]},
+CONTENT_BY_LABEL = {
+    labels[0]: {
+        "texts": ["대수 문제: 방정식, 함수, 부등식 문제 포함", "학생이 많이 어려워하는 유형입니다."],
+        "images": ["https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Algebra_Problem_Example.png/320px-Algebra_Problem_Example.png"],
+        "videos": ["https://youtu.be/Fg0Zp6Ue3AU"]
+    },
+    labels[1]: {
+        "texts": ["기하 문제: 도형, 각도, 길이 관련 문제", "도형을 보고 계산하는 유형입니다."],
+        "images": ["https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Geometry_Problem_Example.png/320px-Geometry_Problem_Example.png"],
+        "videos": ["https://youtu.be/Q3OXmGZ7sE4"]
+    },
+    labels[2]: {
+        "texts": ["확률 문제: 주사위, 카드, 표를 이용한 문제", "확률 계산 능력을 요구하는 문제입니다."],
+        "images": ["https://upload.wikimedia.org/wikipedia/commons/thumb/1/19/Probability_Problem_Example.png/320px-Probability_Problem_Example.png"],
+        "videos": ["https://youtu.be/6lZf5E6T0Wo"]
+    }
 }
 
 # ======================
@@ -105,18 +109,13 @@ def pick_top3(lst):
     return [x for x in lst if isinstance(x, str) and x.strip()][:3]
 
 def get_content_for_label(label: str):
-    """라벨명으로 콘텐츠 반환 (texts, images, videos). 없으면 빈 리스트."""
     cfg = CONTENT_BY_LABEL.get(label, {})
-    return (
-        pick_top3(cfg.get("texts", [])),
-        pick_top3(cfg.get("images", [])),
-        pick_top3(cfg.get("videos", [])),
-    )
+    return pick_top3(cfg.get("texts", [])), pick_top3(cfg.get("images", [])), pick_top3(cfg.get("videos", []))
 
 # ======================
 # 입력(카메라/업로드)
 # ======================
-tab_cam, tab_file = st.tabs(["📷 카메라로 촬영", "📁 파일 업로드"])
+tab_cam, tab_file = st.tabs(["📷 카메라 촬영", "📁 파일 업로드"])
 new_bytes = None
 
 with tab_cam:
@@ -125,8 +124,7 @@ with tab_cam:
         new_bytes = cam.getvalue()
 
 with tab_file:
-    f = st.file_uploader("이미지를 업로드하세요 (jpg, png, jpeg, webp, tiff)",
-                         type=["jpg","png","jpeg","webp","tiff"])
+    f = st.file_uploader("이미지 업로드 (jpg, png, jpeg, webp, tiff)", type=["jpg","png","jpeg","webp","tiff"])
     if f is not None:
         new_bytes = f.getvalue()
 
@@ -151,9 +149,9 @@ if st.session_state.img_bytes:
         st.markdown(
             f"""
             <div class="prediction-box">
-                <span style="font-size:1.0rem;color:#555;">예측 결과:</span>
+                <span style="font-size:1.0rem;color:#555;">예측 유형:</span>
                 <h2>{st.session_state.last_prediction}</h2>
-                <div class="helper">오른쪽 패널에서 예측 라벨의 콘텐츠가 표시됩니다.</div>
+                <div class="helper">오른쪽 패널에서 유형별 콘텐츠 확인 가능</div>
             </div>
             """, unsafe_allow_html=True
         )
@@ -163,10 +161,7 @@ if st.session_state.img_bytes:
     # 왼쪽: 확률 막대
     with left:
         st.subheader("상세 예측 확률")
-        prob_list = sorted(
-            [(labels[i], float(probs[i])) for i in range(len(labels))],
-            key=lambda x: x[1], reverse=True
-        )
+        prob_list = sorted([(labels[i], float(probs[i])) for i in range(len(labels))], key=lambda x: x[1], reverse=True)
         for lbl, p in prob_list:
             pct = p * 100
             hi = "highlight" if lbl == st.session_state.last_prediction else ""
@@ -183,16 +178,16 @@ if st.session_state.img_bytes:
                 """, unsafe_allow_html=True
             )
 
-    # 오른쪽: 정보 패널 (예측 라벨 기본, 다른 라벨로 바꿔보기 가능)
+    # 오른쪽: 정보 패널
     with right:
-        st.subheader("라벨별 고정 콘텐츠")
+        st.subheader("유형별 콘텐츠")
         default_idx = labels.index(st.session_state.last_prediction) if st.session_state.last_prediction in labels else 0
-        info_label = st.selectbox("표시할 라벨 선택", options=labels, index=default_idx)
+        info_label = st.selectbox("표시할 유형 선택", options=labels, index=default_idx)
 
         texts, images, videos = get_content_for_label(info_label)
 
         if not any([texts, images, videos]):
-            st.info(f"라벨 `{info_label}`에 대한 콘텐츠가 아직 없습니다. 코드의 CONTENT_BY_LABEL에 추가하세요.")
+            st.info(f"유형 `{info_label}`에 대한 콘텐츠가 아직 없습니다.")
         else:
             # 텍스트
             if texts:
@@ -200,25 +195,25 @@ if st.session_state.img_bytes:
                 for t in texts:
                     st.markdown(f"""
                     <div class="card" style="grid-column:span 12;">
-                      <h4>텍스트</h4>
+                      <h4>설명</h4>
                       <div>{t}</div>
                     </div>
                     """, unsafe_allow_html=True)
                 st.markdown('</div>', unsafe_allow_html=True)
 
-            # 이미지(최대 3, 3열)
+            # 이미지
             if images:
                 st.markdown('<div class="info-grid">', unsafe_allow_html=True)
                 for url in images[:3]:
                     st.markdown(f"""
                     <div class="card" style="grid-column:span 4;">
-                      <h4>이미지</h4>
+                      <h4>예시 이미지</h4>
                       <img src="{url}" class="thumb" />
                     </div>
                     """, unsafe_allow_html=True)
                 st.markdown('</div>', unsafe_allow_html=True)
 
-            # 동영상(유튜브 썸네일)
+            # 동영상
             if videos:
                 st.markdown('<div class="info-grid">', unsafe_allow_html=True)
                 for v in videos[:3]:
@@ -231,15 +226,7 @@ if st.session_state.img_bytes:
                             <img src="{thumb}" class="thumb"/>
                             <div class="play"></div>
                           </a>
-                          <div class="helper">{v}</div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                    else:
-                        st.markdown(f"""
-                        <div class="card" style="grid-column:span 6;">
-                          <h4>동영상</h4>
-                          <a href="{v}" target="_blank">{v}</a>
                         </div>
                         """, unsafe_allow_html=True)
 else:
-    st.info("카메라로 촬영하거나 파일을 업로드하면 분석 결과와 라벨별 콘텐츠가 표시됩니다.")
+    st.info("카메라로 촬영하거나 파일을 업로드하면 분석 결과와 유형별 콘텐츠가 표시됩니다.")
